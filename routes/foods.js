@@ -11,7 +11,7 @@ router.get("/", async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-});
+})
 
 
 router.get("/featured", async (req, res) => {
@@ -23,8 +23,7 @@ router.get("/featured", async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-});
-
+})
 
 router.get("/:id", async (req, res) => {
   try {
@@ -34,7 +33,7 @@ router.get("/:id", async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-});
+})
 
 
 router.post("/", verifyToken, async (req, res) => {
