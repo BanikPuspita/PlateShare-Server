@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const foods = await Food.find();
+    const foods = await Food.find({ food_status: "Available" });
     res.json(foods);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -45,8 +45,9 @@ router.post("/", verifyToken, async (req, res) => {
       donator: {
         name: req.user.name,
         email: req.user.email,
-        photoURL: body.donator?.photoURL || "",
+        photoURL: req.user.picture || body.donator?.photoURL || "",
       },
+      food_status: "Available",
     });
     await food.save();
     res.status(201).json(food);
@@ -86,6 +87,15 @@ router.delete("/:id", verifyToken, async (req, res) => {
   }
 });
 
+
+router.get("/my/foods", verifyToken, async (req, res) => {
+  try {
+    const foods = await Food.find({ "donator.email": req.user.email });
+    res.json(foods);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;
 
