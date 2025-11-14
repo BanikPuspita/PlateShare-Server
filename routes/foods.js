@@ -1,9 +1,11 @@
+// backend/routes/foods.js
 const express = require("express");
 const Food = require("../models/Food");
 const verifyToken = require("../middleware/verifyFirebaseToken");
 const router = express.Router();
 
-router.get("/", async (req, res) => { 
+// PUBLIC: All available foods
+router.get("/", async (req, res) => {
   try {
     const foods = await Food.find({ food_status: "Available" });
     res.json(foods);
@@ -12,7 +14,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/featured", async (req, res) => { 
+// PUBLIC: Featured
+router.get("/featured", async (req, res) => {
   try {
     const foods = await Food.find({ food_status: "Available" })
       .sort({ quantityNumber: -1 })
@@ -23,6 +26,7 @@ router.get("/featured", async (req, res) => {
   }
 });
 
+// PROTECTED
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const food = await Food.findById(req.params.id);
@@ -35,20 +39,18 @@ router.get("/:id", verifyToken, async (req, res) => {
 
 router.post("/", verifyToken, async (req, res) => {
   try {
-    const body = req.body;
     const food = new Food({
-      ...body,
+      ...req.body,
       donator: {
         name: req.user.name,
         email: req.user.email,
-        photoURL: req.user.photoURL || "", 
+        photoURL: req.user.photoURL || "",
       },
       food_status: "Available",
     });
     await food.save();
     res.status(201).json(food);
   } catch (err) {
-    console.error(err);
     res.status(500).json({ message: err.message });
   }
 });

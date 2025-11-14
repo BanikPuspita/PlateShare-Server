@@ -1,9 +1,8 @@
+// backend/server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const admin = require("firebase-admin");
-const path = require("path");
 
 const foodsRoutes = require("./routes/foods");
 const requestsRoutes = require("./routes/requests");
@@ -12,32 +11,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-let serviceAccount;
+// Firebase Admin
 try {
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    console.log("Firebase Admin: Using env var");
-  } else {
-    const serviceAccountPath = process.env.FIREBASE_ADMIN_SDK_PATH || "./serviceAccountKey.json";
-    serviceAccount = require(path.resolve(serviceAccountPath));
-    console.log("Firebase Admin: Using local file");
-  }
-
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  }
+  const admin = require("./firebaseAdmin");
   console.log("Firebase Admin initialized");
 } catch (err) {
-  console.error("Firebase initialization failed:", err.message);
+  console.error("Firebase Admin failed:", err.message);
 }
 
+// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
+// Routes
 app.use("/api/foods", foodsRoutes);
 app.use("/api/requests", requestsRoutes);
 
