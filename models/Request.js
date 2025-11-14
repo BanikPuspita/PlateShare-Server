@@ -14,5 +14,6 @@ const RequestSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+RequestSchema.index({ foodId: 1, status: 1 });
 
-module.exports = mongoose.model('Request', RequestSchema)
+module.exports = mongoose.model('Request', RequestSchema);

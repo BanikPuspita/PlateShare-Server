@@ -8,9 +8,15 @@ router.post("/", verifyToken, async (req, res) => {
   try {
     const { foodId, location, reason, contactNo, photoURL } = req.body;
 
+    if (!foodId || !location || !contactNo) {
+      return res.status(400).json({ message: "Location and Contact No. are required" });
+    }
+
     const food = await Food.findById(foodId);
     if (!food) return res.status(404).json({ message: "Food not found" });
-
+    if (food.food_status !== "Available") {
+      return res.status(400).json({ message: "Food is no longer available" });
+    }
     if (food.donator.email === req.user.email) {
       return res.status(400).json({ message: "You can't request your own food" });
     }
@@ -39,10 +45,8 @@ router.post("/", verifyToken, async (req, res) => {
 router.get("/food/:foodId", verifyToken, async (req, res) => {
   try {
     const { foodId } = req.params;
-
     const food = await Food.findById(foodId);
     if (!food) return res.status(404).json({ message: "Food not found" });
-
     if (food.donator.email !== req.user.email) {
       return res.status(403).json({ message: "Forbidden: Not the food owner" });
     }
@@ -63,13 +67,22 @@ router.patch("/:requestId", verifyToken, async (req, res) => {
 
     const request = await Request.findById(req.params.requestId).populate("foodId");
     if (!request) return res.status(404).json({ message: "Request not found" });
-
     if (request.foodId.donator.email !== req.user.email) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    if (status === "accepted" && request.foodId.food_status === "donated") {
-      return res.status(400).json({ message: "Food already donated" });
+    if (status === "accepted") {
+      const alreadyAccepted = await Request.findOne({
+        foodId: request.foodId,
+        status: "accepted",
+        _id: { $ne: request._id }
+      });
+      if (alreadyAccepted) {
+        return res.status(400).json({ message: "Food already donated to someone else" });
+      }
+      if (request.foodId.food_status === "donated") {
+        return res.status(400).json({ message: "Food already donated" });
+      }
     }
 
     request.status = status;
@@ -80,7 +93,7 @@ router.patch("/:requestId", verifyToken, async (req, res) => {
       await request.foodId.save();
     }
 
-    res.json({ message: "Request updated successfully", request });
+    res.json({ message: "Request updated", request });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: err.message });

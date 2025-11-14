@@ -4,7 +4,7 @@ const FoodSchema = new mongoose.Schema({
   name: { type: String, required: true },
   image: { type: String, required: true },
   quantityText: { type: String, required: true },
-  quantityNumber: { type: Number, required: true }, 
+  quantityNumber: { type: Number, required: true },
   pickupLocation: { type: String, required: true },
   expireDate: { type: Date, required: true },
   notes: { type: String },
@@ -13,9 +13,11 @@ const FoodSchema = new mongoose.Schema({
     email: String,
     photoURL: String,
   },
-  food_status: { type: String, default: "Available" }, 
+  food_status: { type: String, default: "Available" },
   createdAt: { type: Date, default: Date.now },
 });
 
+FoodSchema.index({ food_status: 1, quantityNumber: -1 });
+FoodSchema.index({ "donator.email": 1 }); 
 
-module.exports = mongoose.model('Food', FoodSchema)
+module.exports = mongoose.model('Food', FoodSchema);
