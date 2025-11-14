@@ -3,7 +3,8 @@ const Food = require("../models/Food");
 const verifyToken = require("../middleware/verifyFirebaseToken");
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+// Public: All available foods
+router.get("/", async (req, res) => {  // REMOVE verifyToken
   try {
     const foods = await Food.find({ food_status: "Available" });
     res.json(foods);
@@ -12,7 +13,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/featured", async (req, res) => {
+// Public: Top 6
+router.get("/featured", async (req, res) => {  // REMOVE verifyToken
   try {
     const foods = await Food.find({ food_status: "Available" })
       .sort({ quantityNumber: -1 })
