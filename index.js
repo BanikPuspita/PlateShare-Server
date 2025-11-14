@@ -1,4 +1,3 @@
-// backend/server.js
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -11,7 +10,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Firebase Admin
 try {
   const admin = require("./firebaseAdmin");
   console.log("Firebase Admin initialized");
@@ -19,13 +17,11 @@ try {
   console.error("Firebase Admin failed:", err.message);
 }
 
-// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
-// Routes
 app.use("/api/foods", foodsRoutes);
 app.use("/api/requests", requestsRoutes);
 

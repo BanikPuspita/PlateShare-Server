@@ -1,10 +1,9 @@
-// backend/routes/foods.js
+
 const express = require("express");
 const Food = require("../models/Food");
 const verifyToken = require("../middleware/verifyFirebaseToken");
 const router = express.Router();
 
-// PUBLIC: All available foods
 router.get("/", async (req, res) => {
   try {
     const foods = await Food.find({ food_status: "Available" });
@@ -14,7 +13,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-// PUBLIC: Featured
 router.get("/featured", async (req, res) => {
   try {
     const foods = await Food.find({ food_status: "Available" })
@@ -26,7 +24,6 @@ router.get("/featured", async (req, res) => {
   }
 });
 
-// PROTECTED
 router.get("/:id", verifyToken, async (req, res) => {
   try {
     const food = await Food.findById(req.params.id);

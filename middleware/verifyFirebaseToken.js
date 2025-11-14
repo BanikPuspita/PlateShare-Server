@@ -1,4 +1,3 @@
-// backend/middleware/verifyFirebaseToken.js
 const admin = require("../firebaseAdmin");
 
 module.exports = async (req, res, next) => {
