@@ -9,10 +9,11 @@ module.exports = async (req, res, next) => {
   try {
     const decoded = await admin.auth().verifyIdToken(idToken);
     req.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      name: decoded.name || decoded.email.split('@')[0]
-    };
+  uid: decoded.uid,
+  email: decoded.email,
+  name: decoded.name || decoded.email.split('@')[0],
+  photoURL: decoded.picture || decoded.photoURL || null  // both possible
+};
     next();
   } catch (err) {
     console.error('Token verify error', err);

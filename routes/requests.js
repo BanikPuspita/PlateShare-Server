@@ -1,15 +1,15 @@
-const express = require('express');
-const Request = require('../models/Request');
-const Food = require('../models/Food');
-const verifyToken = require('../middleware/verifyFirebaseToken');
+const express = require("express");
+const Request = require("../models/Request");
+const Food = require("../models/Food");
+const verifyToken = require("../middleware/verifyFirebaseToken");
 const router = express.Router();
 
-router.post('/', verifyToken, async (req, res) => {
+router.post("/", verifyToken, async (req, res) => {
   try {
     const { foodId, location, reason, contactNo, photoURL } = req.body;
 
     const food = await Food.findById(foodId);
-    if (!food) return res.status(404).json({ message: 'Food not found' });
+    if (!food) return res.status(404).json({ message: "Food not found" });
 
     if (food.donator.email === req.user.email) {
       return res.status(400).json({ message: "You can't request your own food" });
@@ -20,12 +20,12 @@ router.post('/', verifyToken, async (req, res) => {
       requester: {
         name: req.user.name,
         email: req.user.email,
-        photoURL: photoURL || "",
+        photoURL: photoURL || req.user.photoURL || "",
       },
       location,
       reason,
       contactNo,
-      status: 'pending'
+      status: "pending",
     });
 
     await newRequest.save();
@@ -36,10 +36,62 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/my', verifyToken, async (req, res) => {
+router.get("/food/:foodId", verifyToken, async (req, res) => {
   try {
-    const requests = await Request.find({ "requester.email": req.user.email })
-      .populate('foodId'); 
+    const { foodId } = req.params;
+
+    const food = await Food.findById(foodId);
+    if (!food) return res.status(404).json({ message: "Food not found" });
+
+    if (food.donator.email !== req.user.email) {
+      return res.status(403).json({ message: "Forbidden: Not the food owner" });
+    }
+
+    const requests = await Request.find({ foodId }).sort({ createdAt: -1 });
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.patch("/:requestId", verifyToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!["accepted", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const request = await Request.findById(req.params.requestId).populate("foodId");
+    if (!request) return res.status(404).json({ message: "Request not found" });
+
+    if (request.foodId.donator.email !== req.user.email) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    if (status === "accepted" && request.foodId.food_status === "donated") {
+      return res.status(400).json({ message: "Food already donated" });
+    }
+
+    request.status = status;
+    await request.save();
+
+    if (status === "accepted") {
+      request.foodId.food_status = "donated";
+      await request.foodId.save();
+    }
+
+    res.json({ message: "Request updated successfully", request });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/my", verifyToken, async (req, res) => {
+  try {
+    const requests = await Request.find({
+      "requester.email": req.user.email,
+    }).populate("foodId");
     res.json(requests);
   } catch (err) {
     res.status(500).json({ message: err.message });
